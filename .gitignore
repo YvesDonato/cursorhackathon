@@ -1,0 +1,64 @@
+# =========================
+# Node / React / Vite
+# =========================
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# MacOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# =========================
+# Python / FastAPI
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+venv/
+.envrc
+
+# Python cache
+.pytest_cache/
+.mypy_cache/
+
+# =========================
+# Google OAuth / Secrets
+# =========================
+credentials.json
+token.json
+
+# =========================
+# Misc
+# =========================
+*.sqlite3
+*.db
+*.log
+
+# =========================
+# Twilio / ElevenLabs temp
+# =========================
+tmp/
+uploads/
+audio/
+recordings/
