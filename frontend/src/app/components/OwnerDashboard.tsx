@@ -322,10 +322,56 @@ export function OwnerDashboard() {
     }
   }, [isCallActive]);
 
+  const formatGoogleDate = (date: Date) => {
+  return date.toISOString().replace(/[-:]|\.\d{3}/g, "");
+};
+
+  const parseBookingDateTime = (requestedDate: string, requestedTime: string) => {
+    const start = new Date(`${requestedDate} ${requestedTime}`);
+
+    if (Number.isNaN(start.getTime())) {
+      throw new Error(`Invalid booking date/time: ${requestedDate} ${requestedTime}`);
+    }
+
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+    return {
+      start: formatGoogleDate(start),
+      end: formatGoogleDate(end),
+    };
+  };
+
   const handleAccept = (id: number) => {
+    const booking = bookings.find((b) => b.id === id);
+    if (!booking) return;
+
+    const { start, end } = parseBookingDateTime(
+      booking.requestedDate,
+      booking.requestedTime
+    );
+
+    const params = new URLSearchParams({
+      action: "TEMPLATE",
+      text: `${booking.service} - ${booking.clientName}`,
+      dates: `${start}/${end}`,
+      details: `Customer: ${booking.clientName}
+      Phone: ${booking.phone}
+      Service: ${booking.service}
+      Language: ${booking.originalLanguage}
+      Notes: ${booking.notes}
+      Created by NailFlow AI.`,
+      location: "Bella Salon",
+      ctz: "America/Toronto",
+    });
+
+    window.open(
+      `https://calendar.google.com/calendar/render?${params.toString()}`,
+      "_blank"
+    );
+
     setBookings(
-      bookings.map((booking) =>
-        booking.id === id ? { ...booking, status: "accepted" as const } : booking
+      bookings.map((b) =>
+        b.id === id ? { ...b, status: "accepted" as const } : b
       )
     );
   };
