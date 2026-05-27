@@ -18,6 +18,16 @@ export { Prisma }
 export * as $Enums from './enums.ts'
 export * from './enums.ts';
 /**
+ * Model Call
+ * 
+ */
+export type Call = Prisma.CallModel
+/**
+ * Model CallMessage
+ * 
+ */
+export type CallMessage = Prisma.CallMessageModel
+/**
  * Model BookingRequest
  * 
  */

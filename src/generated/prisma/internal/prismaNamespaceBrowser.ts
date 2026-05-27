@@ -51,6 +51,8 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
+  Call: 'Call',
+  CallMessage: 'CallMessage',
   BookingRequest: 'BookingRequest'
 } as const
 
@@ -67,6 +69,34 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+export const CallScalarFieldEnum = {
+  id: 'id',
+  callId: 'callId',
+  active: 'active',
+  createdAt: 'createdAt',
+  name: 'name',
+  service: 'service',
+  requestedDate: 'requestedDate',
+  requestedTime: 'requestedTime',
+  phone: 'phone',
+  language: 'language',
+  notes: 'notes'
+} as const
+
+export type CallScalarFieldEnum = (typeof CallScalarFieldEnum)[keyof typeof CallScalarFieldEnum]
+
+
+export const CallMessageScalarFieldEnum = {
+  id: 'id',
+  callId: 'callId',
+  role: 'role',
+  message: 'message',
+  createdAt: 'createdAt'
+} as const
+
+export type CallMessageScalarFieldEnum = (typeof CallMessageScalarFieldEnum)[keyof typeof CallMessageScalarFieldEnum]
+
+
 export const BookingRequestScalarFieldEnum = {
   id: 'id',
   clientName: 'clientName',
@@ -77,7 +107,8 @@ export const BookingRequestScalarFieldEnum = {
   phone: 'phone',
   notes: 'notes',
   status: 'status',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  callId: 'callId'
 } as const
 
 export type BookingRequestScalarFieldEnum = (typeof BookingRequestScalarFieldEnum)[keyof typeof BookingRequestScalarFieldEnum]
@@ -89,4 +120,12 @@ export const SortOrder = {
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 

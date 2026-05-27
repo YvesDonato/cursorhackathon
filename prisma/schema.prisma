@@ -7,6 +7,31 @@ datasource db {
   provider = "sqlite"
 }
 
+model Call {
+  id              Int              @id @default(autoincrement())
+  callId          String           @unique
+  active          Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  messages        CallMessage[]
+  bookingRequests BookingRequest[]
+  name            String           @default("")
+  service         String           @default("")
+  requestedDate   String           @default("")
+  requestedTime   String           @default("")
+  phone           String           @default("")
+  language        String           @default("")
+  notes           String           @default("")
+}
+
+model CallMessage {
+  id        Int      @id @default(autoincrement())
+  callId    String
+  call      Call     @relation(fields: [callId], references: [callId])
+  role      String
+  message   String
+  createdAt DateTime @default(now())
+}
+
 model BookingRequest {
   id               Int      @id @default(autoincrement())
   clientName       String
@@ -18,4 +43,6 @@ model BookingRequest {
   notes            String   @default("")
   status           String   @default("pending")
   createdAt        DateTime @default(now())
+  callId           String?
+  call             Call?    @relation(fields: [callId], references: [callId])
 }

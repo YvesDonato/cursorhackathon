@@ -1,15 +1,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Check, X, Phone, PhoneOff, Volume2, User, Globe } from "lucide-react";
 import { updateBookingStatus } from "../api/bookings";
+import { getActiveCall } from "../api/calls";
 import type { BookingRequest } from "../generated/prisma/client";
-
-interface TranscriptLine {
-  id: number;
-  speaker: "customer" | "ai";
-  text: string;
-  timestamp: string;
-}
 
 interface LiveBookingData {
   name: string;
@@ -199,122 +194,48 @@ const uiText: Record<string, any> = {
   },
 };
 
-const demoTranscript: TranscriptLine[] = [
-  {
-    id: 1,
-    speaker: "ai",
-    text: "Bonjour! Merci d'avoir appelé Bella Salon. Comment puis-je vous aider aujourd'hui?",
-    timestamp: "14:32:01",
-  },
-  {
-    id: 2,
-    speaker: "customer",
-    text: "Bonjour, je voudrais prendre rendez-vous pour une coupe de cheveux.",
-    timestamp: "14:32:08",
-  },
-  {
-    id: 3,
-    speaker: "ai",
-    text: "Parfait! Je serais ravi de vous aider. Quel est votre nom?",
-    timestamp: "14:32:12",
-  },
-  {
-    id: 4,
-    speaker: "customer",
-    text: "Je m'appelle Sophie Martin.",
-    timestamp: "14:32:16",
-  },
-  {
-    id: 5,
-    speaker: "ai",
-    text: "Merci Sophie. Quel jour vous conviendrait le mieux?",
-    timestamp: "14:32:19",
-  },
-  {
-    id: 6,
-    speaker: "customer",
-    text: "Peut-être jeudi prochain vers 15h si possible?",
-    timestamp: "14:32:24",
-  },
-  {
-    id: 7,
-    speaker: "ai",
-    text: "Jeudi 5 juin à 15h00, c'est parfait. Puis-je avoir votre numéro de téléphone?",
-    timestamp: "14:32:28",
-  },
-  {
-    id: 8,
-    speaker: "customer",
-    text: "Oui, c'est le 555-0192.",
-    timestamp: "14:32:33",
-  },
-  {
-    id: 9,
-    speaker: "ai",
-    text: "Merci! J'ai bien noté votre rendez-vous. Vous recevrez une confirmation par SMS.",
-    timestamp: "14:32:37",
-  },
-];
-
 interface Props {
   initialBookings: BookingRequest[];
 }
 
 export function OwnerDashboard({ initialBookings }: Props) {
   const router = useRouter();
-  const [ownerLanguage, setOwnerLanguage] = useState("French");
+  const [ownerLanguage, setOwnerLanguage] = useState("English");
   const t = uiText[ownerLanguage] || uiText.English;
 
-  const [isCallActive, setIsCallActive] = useState(true);
-  const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
-  const [transcriptIndex, setTranscriptIndex] = useState(0);
+  const { data: activeCall } = useQuery({
+    queryKey: ["activeCall"],
+    queryFn: () => getActiveCall(),
+    refetchInterval: 500,
+  });
+
+  const isCallActive = activeCall?.active === true;
+  const transcript = (activeCall?.messages ?? []).map((m) => ({
+    id: m.id,
+    speaker: m.role === "user" ? ("customer" as const) : ("ai" as const),
+    text: m.message,
+    timestamp: new Date(m.createdAt).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }),
+  }));
+
   const [showTranscript, setShowTranscript] = useState(true);
 
-  const [liveBooking, setLiveBooking] = useState<LiveBookingData>({
-    name: "",
-    service: "",
-    date: "",
-    time: "",
-    phone: "",
-    language: "French",
-    notes: "",
-  });
+  const liveBooking: LiveBookingData = {
+    name: activeCall?.name ?? "",
+    service: activeCall?.service ?? "",
+    date: activeCall?.requestedDate ?? "",
+    time: activeCall?.requestedTime ?? "",
+    phone: activeCall?.phone ?? "",
+    language: activeCall?.language || "English",
+    notes: activeCall?.notes ?? "",
+  };
 
   const [bookings, setBookings] = useState<BookingRequest[]>(initialBookings);
   const [audioLevel, setAudioLevel] = useState(0);
-
-  useEffect(() => {
-    if (isCallActive && transcriptIndex < demoTranscript.length) {
-      const timer = setTimeout(() => {
-        setTranscript((prev) => [...prev, demoTranscript[transcriptIndex]]);
-        setTranscriptIndex(transcriptIndex + 1);
-
-        if (transcriptIndex === 3) {
-          setLiveBooking((prev) => ({ ...prev, name: "Sophie Martin" }));
-        } else if (transcriptIndex === 4) {
-          setLiveBooking((prev) => ({ ...prev, service: "Haircut" }));
-        } else if (transcriptIndex === 6) {
-          setLiveBooking((prev) => ({
-            ...prev,
-            date: "June 5, 2026",
-            time: "3:00 PM",
-          }));
-        } else if (transcriptIndex === 8) {
-          setLiveBooking((prev) => ({ ...prev, phone: "+1 (555) 555-0192" }));
-        }
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-
-    if (transcriptIndex >= demoTranscript.length && isCallActive) {
-      const endTimer = setTimeout(() => {
-        setIsCallActive(false);
-      }, 2000);
-
-      return () => clearTimeout(endTimer);
-    }
-  }, [transcriptIndex, isCallActive]);
 
   useEffect(() => {
     if (isCallActive) {
@@ -395,10 +316,6 @@ Created by NailFlow AI.`,
     );
     await updateBookingStatus({ data: { id, status: "declined" } });
     router.invalidate();
-  };
-
-  const handleTakeOver = () => {
-    setIsCallActive(false);
   };
 
   const pendingCount = bookings.filter((b) => b.status === "pending").length;
@@ -491,10 +408,7 @@ Created by NailFlow AI.`,
                         {showTranscript ? t.hideTranscript : t.showTranscript}
                       </button>
 
-                      <button
-                        onClick={handleTakeOver}
-                        className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all text-sm flex items-center gap-2"
-                      >
+                      <button className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all text-sm flex items-center gap-2">
                         <PhoneOff className="w-4 h-4" />
                         {t.takeOver}
                       </button>
