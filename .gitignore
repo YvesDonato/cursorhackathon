@@ -1,5 +1,9 @@
 node_modules
 .DS_Store
+.direnv/
+src/generated/prisma/
+dev.db
+dev.db-*
 dist
 dist-ssr
 *.local

@@ -19,3 +19,28 @@ model BookingRequest {
   status           String   @default("pending")
   createdAt        DateTime @default(now())
 }
+
+model Call {
+  id        String    @id
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+
+  @@index([active, updatedAt])
+}
+
+model Message {
+  id          Int      @id @default(autoincrement())
+  callId      String
+  externalId  String
+  role        String
+  content     String
+  lastMessage Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  call        Call     @relation(fields: [callId], references: [id], onDelete: Cascade)
+
+  @@unique([callId, externalId])
+  @@index([callId, createdAt])
+}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { Check, X, Phone, PhoneOff, Volume2, User, Globe } from "lucide-react";
 import { updateBookingStatus } from "../api/bookings";
+import { getLiveCallTranscript } from "../api/liveCalls";
 import type { BookingRequest } from "../generated/prisma/client";
 
 interface TranscriptLine {
@@ -30,6 +31,7 @@ const uiText: Record<string, any> = {
     callInProgress: "Call in progress",
     liveTranscript: "Live Call Transcript",
     incomingCall: "Incoming Call",
+    callEnded: "Call ended",
     detected: "Detected",
     hideTranscript: "Hide Transcript",
     showTranscript: "Show Transcript",
@@ -65,6 +67,7 @@ const uiText: Record<string, any> = {
     callInProgress: "Đang có cuộc gọi",
     liveTranscript: "Nội dung cuộc gọi trực tiếp",
     incomingCall: "Cuộc gọi đến",
+    callEnded: "Cuộc gọi đã kết thúc",
     detected: "Phát hiện",
     hideTranscript: "Ẩn nội dung",
     showTranscript: "Hiện nội dung",
@@ -100,6 +103,7 @@ const uiText: Record<string, any> = {
     callInProgress: "Appel en cours",
     liveTranscript: "Transcription de l'appel",
     incomingCall: "Appel entrant",
+    callEnded: "Appel terminé",
     detected: "Détecté",
     hideTranscript: "Masquer la transcription",
     showTranscript: "Afficher la transcription",
@@ -135,6 +139,7 @@ const uiText: Record<string, any> = {
     callInProgress: "Llamada en curso",
     liveTranscript: "Transcripción en vivo",
     incomingCall: "Llamada entrante",
+    callEnded: "Llamada finalizada",
     detected: "Detectado",
     hideTranscript: "Ocultar transcripción",
     showTranscript: "Mostrar transcripción",
@@ -170,6 +175,7 @@ const uiText: Record<string, any> = {
     callInProgress: "通话进行中",
     liveTranscript: "实时通话记录",
     incomingCall: "来电",
+    callEnded: "通话已结束",
     detected: "检测到",
     hideTranscript: "隐藏记录",
     showTranscript: "显示记录",
@@ -199,75 +205,17 @@ const uiText: Record<string, any> = {
   },
 };
 
-const demoTranscript: TranscriptLine[] = [
-  {
-    id: 1,
-    speaker: "ai",
-    text: "Bonjour! Merci d'avoir appelé Bella Salon. Comment puis-je vous aider aujourd'hui?",
-    timestamp: "14:32:01",
-  },
-  {
-    id: 2,
-    speaker: "customer",
-    text: "Bonjour, je voudrais prendre rendez-vous pour une coupe de cheveux.",
-    timestamp: "14:32:08",
-  },
-  {
-    id: 3,
-    speaker: "ai",
-    text: "Parfait! Je serais ravi de vous aider. Quel est votre nom?",
-    timestamp: "14:32:12",
-  },
-  {
-    id: 4,
-    speaker: "customer",
-    text: "Je m'appelle Sophie Martin.",
-    timestamp: "14:32:16",
-  },
-  {
-    id: 5,
-    speaker: "ai",
-    text: "Merci Sophie. Quel jour vous conviendrait le mieux?",
-    timestamp: "14:32:19",
-  },
-  {
-    id: 6,
-    speaker: "customer",
-    text: "Peut-être jeudi prochain vers 15h si possible?",
-    timestamp: "14:32:24",
-  },
-  {
-    id: 7,
-    speaker: "ai",
-    text: "Jeudi 5 juin à 15h00, c'est parfait. Puis-je avoir votre numéro de téléphone?",
-    timestamp: "14:32:28",
-  },
-  {
-    id: 8,
-    speaker: "customer",
-    text: "Oui, c'est le 555-0192.",
-    timestamp: "14:32:33",
-  },
-  {
-    id: 9,
-    speaker: "ai",
-    text: "Merci! J'ai bien noté votre rendez-vous. Vous recevrez une confirmation par SMS.",
-    timestamp: "14:32:37",
-  },
-];
-
 interface Props {
   initialBookings: BookingRequest[];
 }
 
 export function OwnerDashboard({ initialBookings }: Props) {
   const router = useRouter();
-  const [ownerLanguage, setOwnerLanguage] = useState("French");
+  const [ownerLanguage, setOwnerLanguage] = useState("English");
   const t = uiText[ownerLanguage] || uiText.English;
 
-  const [isCallActive, setIsCallActive] = useState(true);
+  const [isCallActive, setIsCallActive] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
-  const [transcriptIndex, setTranscriptIndex] = useState(0);
   const [showTranscript, setShowTranscript] = useState(true);
 
   const [liveBooking, setLiveBooking] = useState<LiveBookingData>({
@@ -284,37 +232,35 @@ export function OwnerDashboard({ initialBookings }: Props) {
   const [audioLevel, setAudioLevel] = useState(0);
 
   useEffect(() => {
-    if (isCallActive && transcriptIndex < demoTranscript.length) {
-      const timer = setTimeout(() => {
-        setTranscript((prev) => [...prev, demoTranscript[transcriptIndex]]);
-        setTranscriptIndex(transcriptIndex + 1);
+    let cancelled = false;
 
-        if (transcriptIndex === 3) {
-          setLiveBooking((prev) => ({ ...prev, name: "Sophie Martin" }));
-        } else if (transcriptIndex === 4) {
-          setLiveBooking((prev) => ({ ...prev, service: "Haircut" }));
-        } else if (transcriptIndex === 6) {
-          setLiveBooking((prev) => ({
-            ...prev,
-            date: "June 5, 2026",
-            time: "3:00 PM",
-          }));
-        } else if (transcriptIndex === 8) {
-          setLiveBooking((prev) => ({ ...prev, phone: "+1 (555) 555-0192" }));
-        }
-      }, 3000);
+    const pollTranscript = async () => {
+      try {
+        const liveCall = await getLiveCallTranscript();
+        if (cancelled) return;
 
-      return () => clearTimeout(timer);
-    }
+        setIsCallActive(liveCall.active);
+        setTranscript(
+          liveCall.messages.map((message) => ({
+            id: message.id,
+            speaker: message.role === "agent" ? "ai" : "customer",
+            text: message.message,
+            timestamp: message.timestamp,
+          })),
+        );
+      } catch (error) {
+        console.error("Failed to poll live call transcript", error);
+      }
+    };
 
-    if (transcriptIndex >= demoTranscript.length && isCallActive) {
-      const endTimer = setTimeout(() => {
-        setIsCallActive(false);
-      }, 2000);
+    void pollTranscript();
+    const interval = window.setInterval(pollTranscript, 100);
 
-      return () => clearTimeout(endTimer);
-    }
-  }, [transcriptIndex, isCallActive]);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     if (isCallActive) {
@@ -472,7 +418,7 @@ Created by NailFlow AI.`,
                       </div>
                       <div>
                         <div className="text-white text-lg">
-                          {t.incomingCall}
+                          {isCallActive ? t.incomingCall : t.callEnded}
                         </div>
                         <div className="flex items-center gap-2 text-neutral-400 text-sm">
                           <Globe className="w-4 h-4" />
@@ -491,13 +437,15 @@ Created by NailFlow AI.`,
                         {showTranscript ? t.hideTranscript : t.showTranscript}
                       </button>
 
-                      <button
-                        onClick={handleTakeOver}
-                        className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all text-sm flex items-center gap-2"
-                      >
-                        <PhoneOff className="w-4 h-4" />
-                        {t.takeOver}
-                      </button>
+                      {isCallActive && (
+                        <button
+                          onClick={handleTakeOver}
+                          className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all text-sm flex items-center gap-2"
+                        >
+                          <PhoneOff className="w-4 h-4" />
+                          {t.takeOver}
+                        </button>
+                      )}
                     </div>
                   </div>
 

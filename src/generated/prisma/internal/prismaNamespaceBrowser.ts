@@ -51,7 +51,9 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  BookingRequest: 'BookingRequest'
+  BookingRequest: 'BookingRequest',
+  Call: 'Call',
+  Message: 'Message'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -81,6 +83,30 @@ export const BookingRequestScalarFieldEnum = {
 } as const
 
 export type BookingRequestScalarFieldEnum = (typeof BookingRequestScalarFieldEnum)[keyof typeof BookingRequestScalarFieldEnum]
+
+
+export const CallScalarFieldEnum = {
+  id: 'id',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CallScalarFieldEnum = (typeof CallScalarFieldEnum)[keyof typeof CallScalarFieldEnum]
+
+
+export const MessageScalarFieldEnum = {
+  id: 'id',
+  callId: 'callId',
+  externalId: 'externalId',
+  role: 'role',
+  content: 'content',
+  lastMessage: 'lastMessage',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MessageScalarFieldEnum = (typeof MessageScalarFieldEnum)[keyof typeof MessageScalarFieldEnum]
 
 
 export const SortOrder = {

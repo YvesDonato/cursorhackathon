@@ -9,4 +9,6 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/BookingRequest.ts'
+export type * from './models/Call.ts'
+export type * from './models/Message.ts'
 export type * from './commonInputTypes.ts'

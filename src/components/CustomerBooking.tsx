@@ -10,35 +10,30 @@ interface Message {
 interface ExtractedInfo {
   name: string;
   service: string;
-  date: string;
-  time: string;
-  phone: string;
-  notes: string;
 }
 
 const languageGreetings: Record<string, string> = {
-  English: "Hello! I'm your AI booking assistant. What service would you like to book?",
-  Spanish: "¡Hola! Soy tu asistente de reservas de IA. ¿Qué servicio te gustaría reservar?",
-  French: "Bonjour! Je suis votre assistant de réservation IA. Quel service souhaitez-vous réserver?",
-  Arabic: "مرحبا! أنا مساعد الحجز الخاص بك. ما الخدمة التي تريد حجزها؟",
-  Mandarin: "你好！我是您的人工智能预订助手。您想预订什么服务？",
-  Hindi: "नमस्ते! मैं आपका एआई बुकिंग सहायक हूं। आप कौन सी सेवा बुक करना चाहेंगे?"
+  English: "Hello! What service would you like to book?",
+  Spanish: "¡Hola! ¿Qué servicio te gustaría reservar?",
+  French: "Bonjour! Quel service souhaitez-vous réserver?",
+  Arabic: "مرحبا! ما الخدمة التي تريد حجزها؟",
+  Mandarin: "你好！您想预订什么服务？",
+  Hindi: "नमस्ते! आप कौन सी सेवा बुक करना चाहेंगे?"
 };
+
+type BookingStep = "service" | "name" | "complete";
 
 export function CustomerBooking() {
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, text: "Hello! I'm your AI booking assistant. What service would you like to book?", sender: "ai" }
+    { id: 1, text: languageGreetings.English, sender: "ai" }
   ]);
   const [inputValue, setInputValue] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("English");
   const [extractedInfo, setExtractedInfo] = useState<ExtractedInfo>({
     name: "",
-    service: "",
-    date: "",
-    time: "",
-    phone: "",
-    notes: ""
+    service: ""
   });
+  const [bookingStep, setBookingStep] = useState<BookingStep>("service");
   const [showSubmit, setShowSubmit] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
@@ -72,19 +67,23 @@ export function CustomerBooking() {
   const handleLanguageChange = (language: string) => {
     setSelectedLanguage(language);
     const greeting: Message = {
-      id: messages.length + 1,
+      id: 1,
       text: languageGreetings[language],
       sender: "ai"
     };
     setMessages([greeting]);
+    setExtractedInfo({ name: "", service: "" });
+    setBookingStep("service");
+    setShowSubmit(false);
   };
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
+    const answer = inputValue.trim();
 
     const newMessage: Message = {
       id: messages.length + 1,
-      text: inputValue,
+      text: answer,
       sender: "customer"
     };
 
@@ -92,24 +91,41 @@ export function CustomerBooking() {
     setInputValue("");
 
     setTimeout(() => {
+      if (bookingStep === "service") {
+        setExtractedInfo((prev) => ({ ...prev, service: answer }));
+        setBookingStep("name");
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: prev.length + 1,
+            text: "Great. What name should we put on the booking?",
+            sender: "ai",
+          },
+        ]);
+        return;
+      }
+
+      if (bookingStep === "name") {
+        setExtractedInfo((prev) => ({ ...prev, name: answer }));
+        setBookingStep("complete");
+        setShowSubmit(true);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: prev.length + 1,
+            text: "Perfect. I have what I need: your service and name.",
+            sender: "ai",
+          },
+        ]);
+        return;
+      }
+
       const aiResponse: Message = {
         id: messages.length + 2,
-        text: selectedLanguage === "English"
-          ? "Perfect! I've collected your details. Please review them on the right."
-          : "Perfect! I've collected your details. Please review them.",
+        text: "I already have the details needed for this request.",
         sender: "ai"
       };
       setMessages(prev => [...prev, aiResponse]);
-
-      setExtractedInfo({
-        name: "Maria Garcia",
-        service: "Haircut & Style",
-        date: "June 2, 2026",
-        time: "2:30 PM",
-        phone: "+1 (555) 123-4567",
-        notes: "First time customer"
-      });
-      setShowSubmit(true);
     }, 1000);
   };
 
@@ -229,30 +245,12 @@ export function CustomerBooking() {
             <h3 className="text-lg text-neutral-900 mb-6 tracking-tight">Booking Details</h3>
             <div className="space-y-5">
               <div>
-                <label className="text-xs text-neutral-500 block mb-1.5">Name</label>
-                <div className="text-neutral-900">{extractedInfo.name || "—"}</div>
-              </div>
-              <div>
                 <label className="text-xs text-neutral-500 block mb-1.5">Service</label>
                 <div className="text-neutral-900">{extractedInfo.service || "—"}</div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs text-neutral-500 block mb-1.5">Date</label>
-                  <div className="text-neutral-900 text-sm">{extractedInfo.date || "—"}</div>
-                </div>
-                <div>
-                  <label className="text-xs text-neutral-500 block mb-1.5">Time</label>
-                  <div className="text-neutral-900 text-sm">{extractedInfo.time || "—"}</div>
-                </div>
-              </div>
               <div>
-                <label className="text-xs text-neutral-500 block mb-1.5">Phone</label>
-                <div className="text-neutral-900">{extractedInfo.phone || "—"}</div>
-              </div>
-              <div>
-                <label className="text-xs text-neutral-500 block mb-1.5">Notes</label>
-                <div className="text-neutral-700 text-sm">{extractedInfo.notes || "—"}</div>
+                <label className="text-xs text-neutral-500 block mb-1.5">Name</label>
+                <div className="text-neutral-900">{extractedInfo.name || "—"}</div>
               </div>
             </div>
 

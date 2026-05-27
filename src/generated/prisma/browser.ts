@@ -22,3 +22,13 @@ export * from './enums.ts';
  * 
  */
 export type BookingRequest = Prisma.BookingRequestModel
+/**
+ * Model Call
+ * 
+ */
+export type Call = Prisma.CallModel
+/**
+ * Model Message
+ * 
+ */
+export type Message = Prisma.MessageModel

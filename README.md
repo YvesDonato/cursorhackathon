@@ -60,3 +60,42 @@ Customer: Hi, can I book gel extensions tomorrow after 6?
 AI: Yes, we have availability at 6:30 PM tomorrow.
 Owner View: Khách muốn đặt lịch nối móng gel vào 6:30 chiều mai.
 ```
+
+## Live Call Transcript Webhook
+
+ElevenLabs call transcript events can be posted to:
+
+```text
+POST /message-webhook
+```
+
+Current accepted payload:
+
+```json
+{
+  "call_id": "abcd123",
+  "role": "user",
+  "message": "i want to book an appointment...",
+  "last_message": false
+}
+```
+
+`role` can be `user` or `agent`. The webhook creates the call if needed, upserts the transcript message, and marks the call inactive when `last_message` is true.
+
+The owner dashboard polls the latest call transcript every 100 ms and renders the live messages from the database.
+
+## Valsea Bridge
+
+The Twilio/Valsea/ElevenLabs bridge from the Valsea repo has been merged into:
+
+```text
+valsea-bridge/
+```
+
+## Run With Cloudflare Tunnel
+
+```bash
+nix run .#tunnel
+```
+
+This prepares Prisma, pushes the SQLite schema, starts the app on port 3000, and exposes it with a temporary Cloudflare Tunnel URL.
