@@ -1,8 +1,8 @@
-# NailFlow AI
+# Nailit AI
 
 A multilingual AI receptionist for nail salons.
 
-NailFlow answers customer phone calls, transcribes the conversation, detects the customer’s language, responds using voice AI, translates the booking details into the salon owner’s preferred language, creates appointment cards, and automatically adds confirmed appointments to Google Calendar.
+Nailit AI answers customer phone calls, transcribes the conversation, detects the customer’s language, responds using voice AI, translates the booking details into the salon owner’s preferred language, creates appointment cards, and automatically adds confirmed appointments to Google Calendar.
 
 ## Tech Stack
 
