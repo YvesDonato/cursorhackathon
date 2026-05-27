@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "@tanstack/react-router";
 import { Send, Mic, MicOff } from "lucide-react";
 
 interface Message {
@@ -133,14 +132,6 @@ export function CustomerBooking() {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
-      <div className="mb-8">
-        <Link
-          to="/"
-          className="inline-flex px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-all text-sm"
-        >
-          Owner Dashboard
-        </Link>
-      </div>
       <div className="text-center mb-12">
         <h1 className="text-3xl text-neutral-900 mb-3 tracking-tight">Book Your Appointment</h1>
         <p className="text-neutral-500">Chat with our AI assistant in your preferred language</p>

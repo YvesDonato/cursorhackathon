@@ -7,7 +7,7 @@ NailFlow answers customer phone calls, transcribes the conversation, detects the
 ## Tech Stack
 
 - Frontend: React
-- Backend: FastAPI
+- Backend: TanStack Start
 - Voice AI: ElevenLabs
 - Phone Calls: Twilio
 - AI Transcription: Speech-to-text / AI transcription service
@@ -43,6 +43,7 @@ The dashboard has three main sections:
 Shows the current phone call.
 
 Features:
+
 - call status
 - animated voice wave
 - AI receptionist status
@@ -58,3 +59,4 @@ Example:
 Customer: Hi, can I book gel extensions tomorrow after 6?
 AI: Yes, we have availability at 6:30 PM tomorrow.
 Owner View: Khách muốn đặt lịch nối móng gel vào 6:30 chiều mai.
+```

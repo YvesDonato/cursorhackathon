@@ -7,8 +7,15 @@ datasource db {
   provider = "sqlite"
 }
 
-model Todo {
-  id        Int      @id @default(autoincrement())
-  title     String
-  createdAt DateTime @default(now())
+model BookingRequest {
+  id               Int      @id @default(autoincrement())
+  clientName       String
+  service          String
+  requestedDate    String
+  requestedTime    String
+  originalLanguage String
+  phone            String
+  notes            String   @default("")
+  status           String   @default("pending")
+  createdAt        DateTime @default(now())
 }
